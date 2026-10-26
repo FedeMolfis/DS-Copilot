@@ -1,0 +1,471 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Probar DS Copilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/*
+  Tokens tomados del archivo Figma "Design Process" → página Componentes (node 51:563).
+  Nombres de Variables entre paréntesis. Donde Figma no define un valor (superficies hundidas
+  en oscuro), se deriva con color-mix a partir de tokens existentes, sin inventar hex nuevos.
+*/
+:root{
+  /* Color — modo claro */
+  --bg:#DAE1D9;            /* color/background/primary */
+  --sunk:#BFCBBE;          /* color/action/secondary/hover */
+  --fg:#4C304F;            /* color/text/primary */
+  --muted:#5E4061;         /* color/text/secondary */
+  --brand:#4C304F;         /* color/text/brand */
+  --line:#A3B3A2;          /* color/border/subtle */
+  --line-strong:#7A5C7D;   /* color/border/default */
+  --action:#4C304F;        /* color/action/primary/default */
+  --action-hover:#361F38;  /* color/action/primary/hover */
+  --on-action:#DAE1D9;     /* color/text/inverse */
+  --focus:#231324;         /* color/action/focus */
+  --danger:#A32A22;        /* color/status/danger/content */
+
+  /* Tipografía — Source Sans 3 */
+  --sans:"Source Sans 3",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --size-sm:16px; --lh-sm:24px;   /* typography/size|line-height/sm  → Body/SM */
+  --size-md:20px; --lh-md:28px;   /* typography/size|line-height/md  → Body/MD, Label/MD */
+
+  /* Espacio y radios */
+  --space-xxs:4px; --space-xs:8px; --space-s:16px; --space-m:24px; --space-l:32px;
+  --radius-s:4px; --radius-m:8px; --radius-full:9999px;
+  --radius-card:16px; /* contenedores de ejemplo en Figma */
+
+  color-scheme:light;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#231324; --sunk:color-mix(in srgb,#DAE1D9 8%,#231324);
+  --fg:#DAE1D9; --muted:#A3B3A2; --brand:#BFCBBE;
+  --line:color-mix(in srgb,#6F7D6E 55%,#231324); --line-strong:#6F7D6E;
+  --action:#BFCBBE; --action-hover:#DAE1D9; --on-action:#231324;
+  --focus:#DAE1D9; --danger:#F4B6B1;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#231324; --sunk:color-mix(in srgb,#DAE1D9 8%,#231324);
+  --fg:#DAE1D9; --muted:#A3B3A2; --brand:#BFCBBE;
+  --line:color-mix(in srgb,#6F7D6E 55%,#231324); --line-strong:#6F7D6E;
+  --action:#BFCBBE; --action-hover:#DAE1D9; --on-action:#231324;
+  --focus:#DAE1D9; --danger:#F4B6B1;
+  color-scheme:dark}
+
+*{box-sizing:border-box}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);font-size:var(--size-sm);line-height:var(--lh-sm);-webkit-font-smoothing:antialiased}
+a{color:var(--brand);text-underline-offset:3px} a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:var(--radius-s)}
+code,kbd{font-family:var(--mono);font-size:.84em;background:var(--sunk);border:1px solid var(--line);border-radius:var(--radius-s);padding:1px 5px;overflow-wrap:anywhere}
+
+.wrap{max-width:1080px;margin:0 auto;padding-block:var(--space-l) 80px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:grid;grid-template-columns:200px minmax(0,1fr);gap:56px}
+@media (max-width:1024px){.wrap{grid-template-columns:minmax(0,1fr);gap:0;padding-block:var(--space-m) 64px}}
+
+/* Barra superior + menú hamburguesa (≤1024px) */
+.topbar{display:none}
+@media (max-width:1024px){
+  .topbar{display:flex;align-items:center;justify-content:space-between;gap:var(--space-s);
+    position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+    padding:calc(env(safe-area-inset-top,0px) + var(--space-xs)) max(16px,env(safe-area-inset-right,0px)) var(--space-xs) max(16px,env(safe-area-inset-left,0px))}
+  .topbar .brand{font-weight:600;font-size:var(--size-md);line-height:var(--lh-md)}
+  .menu-btn{display:inline-grid;place-items:center;width:44px;height:44px;border-radius:var(--radius-full);
+    border:1px solid var(--line-strong);background:transparent;color:var(--brand);cursor:pointer;padding:0}
+  .menu-btn:hover{background:var(--sunk)}
+  .menu-btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:var(--radius-full)}
+  .menu-btn svg{width:24px;height:24px}
+  .menu-btn .i-close{display:none}
+  body.nav-open .menu-btn .i-open{display:none}
+  body.nav-open .menu-btn .i-close{display:block}
+
+  nav.toc{display:none;position:fixed;z-index:19;left:0;right:0;top:var(--topbar-h,61px);
+    max-height:calc(100dvh - var(--topbar-h,61px));overflow-y:auto;
+    background:var(--bg);border-bottom:1px solid var(--line-strong);
+    padding:var(--space-xs) max(16px,env(safe-area-inset-right,0px)) var(--space-s) max(16px,env(safe-area-inset-left,0px));
+    box-shadow:0 12px 24px -12px color-mix(in srgb,var(--focus) 35%,transparent)}
+  body.nav-open nav.toc{display:flex}
+  nav.toc .brand{display:none}
+  nav.toc a{padding:12px var(--space-s);font-size:var(--size-md);line-height:var(--lh-md);min-height:44px}
+  .scrim{display:none;position:fixed;inset:0;z-index:18;background:color-mix(in srgb,var(--focus) 40%,transparent)}
+  body.nav-open .scrim{display:block}
+  section{scroll-margin-top:calc(var(--topbar-h,61px) + var(--space-s))}
+}
+
+/* Índice */
+.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + var(--space-l));align-self:start;display:flex;flex-direction:column;gap:2px}
+.toc .brand{font-weight:600;font-size:var(--size-md);line-height:var(--lh-md);margin-bottom:var(--space-s)}
+.toc a{color:var(--muted);text-decoration:none;padding:6px 12px;border-radius:var(--radius-full)}
+.toc a:hover{color:var(--fg);background:var(--sunk)}
+
+main{min-width:0;max-width:720px;display:flex;flex-direction:column;gap:56px}
+section{display:flex;flex-direction:column;gap:var(--space-s);scroll-margin-top:var(--space-m)}
+h1,h2,h3{text-wrap:balance;margin:0;color:var(--fg)}
+h1{font-size:clamp(34px,6vw,48px);line-height:1.1;letter-spacing:-.015em;font-weight:700}
+h2{font-size:28px;line-height:36px;font-weight:600}
+h3{font-size:var(--size-md);line-height:var(--lh-md);font-weight:500} /* Label/MD */
+p{margin:0}
+.muted{color:var(--muted)} .faint{color:var(--muted);font-size:var(--size-sm)}
+.eyebrow{font-size:var(--size-sm);font-weight:600;color:var(--muted)}
+.lead{font-size:var(--size-md);line-height:var(--lh-md);color:var(--muted);max-width:60ch} /* Body/MD */
+ul{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+
+/* Botones — píldora, tamaños M y L del Figma */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:var(--space-xs);
+  height:40px;padding:0 var(--space-m);border-radius:var(--radius-full);
+  font-family:var(--sans);font-size:var(--size-sm);line-height:var(--lh-sm);font-weight:400;
+  text-decoration:none;white-space:nowrap;border:1px solid transparent;cursor:pointer}
+.btn.l{height:48px;padding:0 var(--space-l);font-size:var(--size-md);line-height:var(--lh-md);font-weight:500}
+.btn.primary{background:var(--action);color:var(--on-action)}
+.btn.primary:hover{background:var(--action-hover);color:var(--on-action)}
+.btn.secondary{border-color:var(--line-strong);color:var(--brand);background:transparent}
+.btn.secondary:hover{background:var(--sunk);color:var(--brand)}
+.btn svg{width:20px;height:20px;flex:none}
+.btn.l svg{width:24px;height:24px}
+.btn:focus-visible{outline:2px solid var(--focus);outline-offset:2px;border-radius:var(--radius-full)}
+
+/* Hero */
+.hero{display:flex;flex-direction:column;gap:var(--space-s);padding-bottom:var(--space-xs)}
+.actions{display:flex;flex-wrap:wrap;gap:var(--space-xs);margin-top:var(--space-xs)}
+.meta{display:flex;flex-wrap:wrap;gap:var(--space-xs)}
+.pill{font-size:14px;line-height:20px;padding:4px 12px;border-radius:var(--radius-full);border:1px solid var(--line);color:var(--muted)}
+.pill.accent{background:var(--action);border-color:transparent;color:var(--on-action)}
+
+/* Bloque de descarga */
+.download{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:var(--space-s);
+  padding:var(--space-s) var(--space-m);border-radius:var(--radius-card);background:var(--sunk)}
+.download .info{display:flex;flex-direction:column;gap:2px;min-width:0}
+.download .info b{font-weight:500;font-size:var(--size-md);line-height:var(--lh-md)}
+
+/* Pasos */
+.steps{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;counter-reset:s}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:32px minmax(0,1fr);gap:var(--space-s);padding:var(--space-s) 0;border-top:1px solid var(--line)}
+.steps>li:first-child{border-top:0}
+.steps>li::before{content:counter(s);width:28px;height:28px;border-radius:var(--radius-full);display:grid;place-items:center;
+  font-size:14px;font-weight:600;background:var(--action);color:var(--on-action);font-variant-numeric:tabular-nums}
+.steps>li>div{display:flex;flex-direction:column;gap:var(--space-xxs);min-width:0}
+.steps b{font-weight:500}
+
+.note{border-radius:var(--radius-m);padding:var(--space-s);display:flex;flex-direction:column;gap:var(--space-xxs);background:var(--sunk);border-left:3px solid var(--line-strong)}
+.note strong{font-weight:600;color:var(--brand)}
+
+.path{display:inline-flex;flex-wrap:wrap;gap:var(--space-xxs);align-items:center;font-size:14px;line-height:20px}
+.path span{border:1px solid var(--line-strong);border-radius:var(--radius-m);padding:2px 8px;font-weight:500}
+.path i{font-style:normal;color:var(--muted)}
+
+/* Estados de la pantalla inicial */
+.states{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--space-s)}
+@media (max-width:640px){.states{grid-template-columns:minmax(0,1fr)}}
+.state{border:1px solid var(--line);border-radius:var(--radius-card);padding:var(--space-s);display:flex;flex-direction:column;gap:var(--space-xs)}
+.state .lbl{font-size:14px;line-height:20px;font-weight:600;color:var(--muted)}
+.state h3{font-size:var(--size-sm);line-height:var(--lh-sm);font-weight:600}
+.state p{font-size:14px;line-height:20px}
+.state .btns{display:flex;flex-direction:column;gap:6px;margin-top:auto;padding-top:var(--space-xs)}
+.state .btn{height:32px;padding:0 var(--space-s);font-size:14px;cursor:default;white-space:normal;text-align:center}
+.state .btn.secondary:hover{background:transparent}
+.state .btn.primary:hover{background:var(--action)}
+
+/* Flujos */
+.flows{display:flex;flex-direction:column;gap:var(--space-s)}
+details.flow{border:1px solid var(--line);border-radius:var(--radius-card)}
+details.flow[open]{border-color:var(--line-strong)}
+details.flow summary{cursor:pointer;list-style:none;padding:var(--space-s) var(--space-m);display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--space-xxs) var(--space-s);align-items:center;border-radius:var(--radius-card)}
+details.flow summary::-webkit-details-marker{display:none}
+details.flow summary .t{font-weight:500;font-size:var(--size-md);line-height:var(--lh-md)}
+details.flow summary .d{grid-column:1;color:var(--muted)}
+details.flow summary .chev{grid-row:1/3;grid-column:2;color:var(--muted);font-size:22px;transition:transform .15s}
+details.flow[open] summary .chev{transform:rotate(90deg)}
+details.flow .body{padding:0 var(--space-m) var(--space-m);display:flex;flex-direction:column;gap:var(--space-s)}
+.tag{font-size:13px;line-height:18px;font-weight:600;padding:2px 10px;border-radius:var(--radius-full);border:1px solid var(--line-strong);color:var(--brand);white-space:nowrap}
+.tag.ai{background:var(--action);border-color:transparent;color:var(--on-action)}
+
+.origins{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--space-s)}
+@media (max-width:560px){.origins{grid-template-columns:minmax(0,1fr)}}
+.origin{border-radius:var(--radius-m);padding:var(--space-s);display:flex;flex-direction:column;gap:var(--space-xxs);font-size:15px}
+.origin .o{font-size:14px;font-weight:600;color:var(--brand)}
+.origin.calc{background:var(--sunk)}
+.origin.draft{border:1px dashed var(--line-strong)}
+
+/* Qué mirar — checkbox estilo Figma */
+.checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:var(--space-xs)}
+.checks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--space-xs);align-items:start}
+.checks input{appearance:none;-webkit-appearance:none;width:20px;height:20px;margin:2px 0 0;border:1px solid var(--line-strong);border-radius:var(--radius-s);background:var(--bg);display:grid;place-items:center;cursor:pointer}
+.checks input:checked{background:var(--action);border-color:var(--action)}
+.checks input:checked::after{content:"";width:5px;height:10px;border:solid var(--on-action);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
+.checks label{cursor:pointer}
+
+/* Problemas */
+.faq{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line)}
+.faq summary{cursor:pointer;padding:var(--space-s) 0;font-weight:500}
+.faq details>div{padding:0 0 var(--space-s);color:var(--muted);display:flex;flex-direction:column;gap:var(--space-xs)}
+
+.limits li{color:var(--muted)}
+footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:var(--space-s);justify-content:space-between;align-items:center}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <span class="brand">DS Copilot</span>
+  <button class="menu-btn" type="button" aria-expanded="false" aria-controls="toc" aria-label="Abrir menú">
+    <svg class="i-open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+    <svg class="i-close" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+</header>
+<div class="scrim" aria-hidden="true"></div>
+<div class="wrap">
+  <nav class="toc" id="toc" aria-label="En esta página">
+    <div class="brand">DS Copilot</div>
+    <a href="#instalar">Instalar</a>
+    <a href="#api-key">Tu API key</a>
+    <a href="#al-abrirlo">Al abrirlo</a>
+    <a href="#flujos">Qué podés hacer</a>
+    <a href="#recorrido">Recorrido de prueba</a>
+    <a href="#que-mirar">Qué mirar</a>
+    <a href="#problemas">Si algo falla</a>
+    <a href="#limites">Límites conocidos</a>
+  </nav>
+
+  <main>
+    <header class="hero">
+      <span class="eyebrow">Guía para testers · prototipo 5</span>
+      <h1>Probar DS Copilot</h1>
+      <p class="lead">DS Copilot es un plugin de Figma que lee tus pantallas, detecta el design system que ya está implícito en ellas y lo convierte en un sistema real: Variables, Text Styles, componentes y un sitio de documentación. Claude propone, unas reglas fijas validan, vos aprobás y el plugin construye y verifica en tu archivo.</p>
+      <div class="meta">
+        <span class="pill accent">Gratis</span>
+        <span class="pill">Usa tu propia API key de Anthropic</span>
+        <span class="pill">Figma desktop</span>
+        <span class="pill">Todo pasa dentro del plugin</span>
+      </div>
+      <div class="actions">
+        <a class="btn primary l" href="plugin.zip" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          Descargar plugin.zip
+        </a>
+        <a class="btn secondary l" href="#instalar">Cómo instalarlo</a>
+      </div>
+    </header>
+
+    <section id="instalar">
+      <h2>Instalar</h2>
+      <div class="download">
+        <div class="info">
+          <b>plugin.zip</b>
+          <span class="muted">Contiene la carpeta <code>ds-diagnostico</code> con el plugin.</span>
+        </div>
+        <a class="btn primary" href="plugin.zip" download>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v11"/><path d="m7 10 5 5 5-5"/><path d="M5 20h14"/></svg>
+          Descargar
+        </a>
+      </div>
+      <p class="muted">Los plugins en desarrollo solo se pueden importar desde la app de escritorio de Figma, no desde el navegador.</p>
+      <ol class="steps">
+        <li><div><b>Descargá y descomprimí <code>plugin.zip</code>.</b><span class="muted">Queda una carpeta <code>ds-diagnostico</code> con cuatro archivos: <code>manifest.json</code>, <code>code.js</code>, <code>ui.html</code> y <code>README.md</code>. Guardala en un lugar fijo: Figma la lee desde ahí cada vez que abrís el plugin.</span></div></li>
+        <li><div><b>Abrí cualquier archivo de diseño en Figma desktop.</b><span class="muted">Puede ser uno tuyo con pantallas, o uno vacío.</span></div></li>
+        <li><div><b>Importá el manifest.</b>
+          <span class="path"><span>Menú</span><i>→</i><span>Plugins</span><i>→</i><span>Development</span><i>→</i><span>Import plugin from manifest…</span></span>
+          <span class="muted">Elegí el <code>manifest.json</code> que está dentro de <code>ds-diagnostico</code>.</span></div></li>
+        <li><div><b>Abrilo.</b>
+          <span class="path"><span>Plugins</span><i>→</i><span>Development</span><i>→</i><span>DS Copilot · prototipo 5</span></span>
+          <span class="muted">Desde ahí queda también en tus plugins recientes.</span></div></li>
+      </ol>
+      <div class="note"><strong>Si te llega una versión nueva</strong><span>Reemplazá la carpeta <code>ds-diagnostico</code> por la nueva, en el mismo lugar, y volvé a abrir el plugin. No hace falta importarlo otra vez, y se mantienen tu API key y el progreso guardado.</span></div>
+    </section>
+
+    <section id="api-key">
+      <h2>Tu API key</h2>
+      <p>Cada persona usa su propia key: lo que Claude genera se cobra en tu cuenta de Anthropic, no en la de otra persona.</p>
+      <ol class="steps">
+        <li><div><b>Creá una key en <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a>.</b><span class="muted">La cuenta necesita algo de crédito cargado.</span></div></li>
+        <li><div><b>Pegala cuando el plugin te la pida.</b><span class="muted">Aparece la primera vez que entrás a un flujo que usa Claude. Ahí también podés elegir el modelo.</span></div></li>
+      </ol>
+      <div class="note"><strong>Dónde queda guardada</strong><span>En el almacenamiento del plugin, en tu computadora y solo para tu usuario. El plugin la usa únicamente para hablar con <code>api.anthropic.com</code>; no la ve nadie más que la use en otra máquina.</span></div>
+      <p class="faint">Sin key igual podés analizar tus pantallas y generar la documentación con las partes que se miden desde Figma.</p>
+    </section>
+
+    <section id="al-abrirlo">
+      <h2>Al abrirlo</h2>
+      <p class="muted">La pantalla inicial revisa el archivo y te dice si ya tiene un design system. Según lo que encuentre, te ofrece un camino distinto:</p>
+      <div class="states">
+        <div class="state">
+          <span class="lbl">Sin sistema</span>
+          <h3>Todavía no hay Variables ni estilos</h3>
+          <p class="muted">Analiza tus pantallas para armar el sistema a partir de lo que ya diseñaste.</p>
+          <div class="btns"><span class="btn primary">Analizar esta página</span><span class="btn secondary">Analizar todo el archivo</span></div>
+        </div>
+        <div class="state">
+          <span class="lbl">Sistema de este plugin</span>
+          <h3>Fundaciones creadas con DS Copilot</h3>
+          <p class="muted">Seguís construyendo sobre lo que ya existe.</p>
+          <div class="btns"><span class="btn primary">Crear componentes</span><span class="btn secondary">Crear un componente conversando</span><span class="btn secondary">Crear o actualizar documentación</span></div>
+        </div>
+        <div class="state">
+          <span class="lbl">Sistema propio</span>
+          <h3>Colecciones hechas por tu equipo</h3>
+          <p class="muted">Lee tu sistema tal como está y trabaja con tus tokens.</p>
+          <div class="btns"><span class="btn primary">Crear un componente conversando</span><span class="btn secondary">Crear o actualizar documentación</span></div>
+        </div>
+      </div>
+      <p class="faint">Si tenés capas seleccionadas, aparece también <b>Analizar la selección</b>.</p>
+    </section>
+
+    <section id="flujos">
+      <h2>Qué podés hacer</h2>
+      <p class="muted">Cuatro flujos. Tocá cada uno para ver cómo funciona.</p>
+      <div class="flows">
+        <details class="flow" open>
+          <summary><span class="t">Armar el sistema desde tus pantallas</span><span class="tag ai">Usa Claude</span><span class="d">Color, tipografía y espacio, en ese orden.</span><span class="chev" aria-hidden="true">›</span></summary>
+          <div class="body">
+            <p>El análisis encuentra los colores, tamaños de texto y espaciados que usás, cuáles se repiten casi iguales y cuáles no tienen contraste suficiente. Con eso, Claude propone las fundaciones paso a paso.</p>
+            <ul>
+              <li>En cada paso ves la propuesta y un resumen de por qué. Pedí cambios con tus palabras o aprobá.</li>
+              <li>Las reglas revisan cada propuesta: contraste WCAG AA en claro y oscuro, grilla de 4, tokens en tres capas (primitivo → semántico → componente).</li>
+              <li>Al construir se crean las colecciones <code>Primitives</code> y <code>Semantic</code> con modo claro y oscuro, los Text Styles y una página «Fundaciones». Después ves un checklist que compara lo construido con lo aprobado.</li>
+            </ul>
+            <p class="faint">Podés construirlo en un archivo nuevo (el plugin retoma solo el diagnóstico guardado) o probar en el mismo archivo.</p>
+          </div>
+        </details>
+
+        <details class="flow">
+          <summary><span class="t">Crear los componentes base</span><span class="tag ai">Usa Claude</span><span class="d">Botón, campos de texto y selección.</span><span class="chev" aria-hidden="true">›</span></summary>
+          <div class="body">
+            <ul>
+              <li><b>Botón:</b> estilos (Primary, Secondary…), tamaños S, M y L y estados normal, hover y deshabilitado.</li>
+              <li><b>Campos:</b> Input, Select y Textarea con estados normal, foco, error y deshabilitado.</li>
+              <li><b>Selección:</b> Checkbox y Radio, marcados y sin marcar.</li>
+            </ul>
+            <p>Se crean en la página «Componentes», atados a tus semánticos, espaciados, radios y Text Styles, con un formulario de ejemplo en claro y oscuro. Si hace falta un token que tu sistema no tiene, lo ves propuesto antes de aprobar.</p>
+          </div>
+        </details>
+
+        <details class="flow">
+          <summary><span class="t">Crear un componente conversando</span><span class="tag ai">Usa Claude</span><span class="d">Tooltip, toast, alert, stepper, badge, tabs, card…</span><span class="chev" aria-hidden="true">›</span></summary>
+          <div class="body">
+            <ul>
+              <li>Contá qué necesitás con tus palabras, o tocá una de las sugerencias. Claude lo diseña usando solo los tokens de tu sistema.</li>
+              <li>Antes de mostrártelo, las reglas lo revisan: que todo use tokens, contraste AA de cada variante en claro y oscuro, grilla y nombres. Si algo falla, Claude lo corrige solo.</li>
+              <li>Ves todas las variantes en claro y oscuro, sus propiedades y los tokens que usa. Pedí cambios hasta que te cierre.</li>
+              <li>Al construir, se crea en una página con su nombre: component set, propiedades de texto y de mostrar u ocultar, e instancias para los componentes hechos de partes (como Stepper).</li>
+            </ul>
+            <div class="note"><strong>Si algo falla al construir</strong><span>El plugin deshace lo que llegó a crear, así que el archivo queda como estaba.</span></div>
+          </div>
+        </details>
+
+        <details class="flow">
+          <summary><span class="t">Crear o actualizar la documentación</span><span class="tag">Key opcional</span><span class="d">Un sitio estático listo para publicar.</span><span class="chev" aria-hidden="true">›</span></summary>
+          <div class="body">
+            <ol class="steps">
+              <li><div><b>Leer el archivo.</b><span class="muted">Variables con sus valores en claro y oscuro, Text Styles, componentes y una imagen de cada uno. Solo lee, no cambia nada.</span></div></li>
+              <li><div><b>¿Ya generaste documentación antes?</b><span class="muted">Si sí, elegí el <code>ds-docs-v….zip</code> que descargaste la última vez: se conservan los textos aprobados y la versión sube sola. Si es la primera vez, salteá el paso.</span></div></li>
+              <li><div><b>Nombre y versión.</b><span class="muted">Ves la lista de componentes con el estado de sus textos.</span></div></li>
+              <li><div><b>Textos que faltan → Generar → Descargar.</b><span class="muted">El .zip es un sitio que se publica tal cual en Netlify Drop o GitHub Pages, o se abre local desde <code>index.html</code>.</span></div></li>
+            </ol>
+            <p>Cada componente trae Descripción, Anatomía, Accesibilidad y Ejemplos de uso, y cada sección dice de dónde salió:</p>
+            <div class="origins">
+              <div class="origin calc"><span class="o">Calculado desde Figma</span><span>Anatomía, contraste de cada texto e ícono en claro y oscuro, área táctil de 44×44 y foco. Es exacto y se actualiza en cada export.</span></div>
+              <div class="origin draft"><span class="o">Borrador · revisar</span><span>Lo redacta Claude con tu key: cuándo usarlo, rol y teclado, lectores de pantalla y ejemplos correcto e incorrecto. Queda como borrador hasta que lo marques «Revisado» en el export siguiente.</span></div>
+            </div>
+            <p class="faint">El sitio incluye además una capa para agentes de IA: <code>llms.txt</code>, tokens en formato DTCG y un Markdown por componente.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+    <section id="recorrido">
+      <h2>Recorrido de prueba</h2>
+      <p class="muted">Si no sabés por dónde empezar, este orden pasa por todo en unos 30 a 45 minutos. Usá un archivo con algunas pantallas reales.</p>
+      <ol class="steps">
+        <li><div><b>Analizá una página con pantallas.</b><span class="muted">Mirá qué encontró: colores casi repetidos, tamaños de texto, problemas de contraste.</span></div></li>
+        <li><div><b>Tocá «Armar mi sistema a partir de esto» y pegá tu key.</b><span class="muted">Usá «Probar en este mismo archivo» para ir más rápido.</span></div></li>
+        <li><div><b>Recorré Color → Tipografía → Espacio.</b><span class="muted">En al menos uno, pedí un cambio con tus palabras antes de aprobar.</span></div></li>
+        <li><div><b>Construí y revisá el checklist.</b><span class="muted">Después cambiá un color primitivo en Variables y mirá cómo se actualiza todo.</span></div></li>
+        <li><div><b>Creá los componentes base.</b><span class="muted">Botón, campos y selección.</span></div></li>
+        <li><div><b>Creá un componente conversando.</b><span class="muted">Por ejemplo: «un toast de éxito y de error, con ícono, texto y botón de cerrar».</span></div></li>
+        <li><div><b>Generá la documentación y abrila.</b><span class="muted">Leé la página de un componente y fijate si los borradores de Claude te sirven como punto de partida.</span></div></li>
+      </ol>
+    </section>
+
+    <section id="que-mirar">
+      <h2>Qué mirar</h2>
+      <p class="muted">Estas son las preguntas que más nos sirven. Podés ir tildándolas a medida que las probás.</p>
+      <ul class="checks">
+        <li><input type="checkbox" id="q1"><label for="q1">¿Las propuestas se sienten basadas en <em>tus</em> pantallas, o genéricas?</label></li>
+        <li><input type="checkbox" id="q2"><label for="q2">¿El resumen de cada paso te alcanza para decidir?</label></li>
+        <li><input type="checkbox" id="q3"><label for="q3">¿Pedir un cambio con tus palabras funciona? Probá algo que rompa una regla, como «usá este color de texto aunque no llegue al contraste», y fijate cómo responde.</label></li>
+        <li><input type="checkbox" id="q4"><label for="q4">¿Cuánto tarda cada propuesta? ¿Se hace larga la espera?</label></li>
+        <li><input type="checkbox" id="q5"><label for="q5">En Figma, ¿las Variables, los estilos y los componentes quedaron como esperabas?</label></li>
+        <li><input type="checkbox" id="q6"><label for="q6">¿El componente conversado salió como lo imaginabas? ¿Cuántas vueltas hicieron falta?</label></li>
+        <li><input type="checkbox" id="q7"><label for="q7">¿La documentación generada la publicarías así, o qué le falta?</label></li>
+      </ul>
+      <p class="faint">Mandá tus respuestas, capturas o errores respondiendo el mensaje con el que te llegó esta página. Si aparece un error en rojo dentro del plugin, copiá el texto completo.</p>
+    </section>
+
+    <section id="problemas">
+      <h2>Si algo falla</h2>
+      <div class="faq">
+        <details><summary>No encuentro «Development» en el menú de Plugins</summary>
+          <div><p>Estás en Figma desde el navegador. Los plugins en desarrollo solo se importan desde la app de escritorio. Bajala desde <a href="https://www.figma.com/downloads/" target="_blank" rel="noopener">figma.com/downloads</a>.</p></div></details>
+        <details><summary>«La API key no es válida»</summary>
+          <div><p>Revisá que la copiaste completa, sin espacios, y que no la desactivaste en la consola de Anthropic.</p></div></details>
+        <details><summary>«Llegaste al límite de uso de la API»</summary>
+          <div><p>Tu cuenta llegó a su límite o se quedó sin crédito. Cargá crédito o esperá unos minutos y volvé a intentar.</p></div></details>
+        <details><summary>Cerré el plugin a mitad de camino</summary>
+          <div><p>En el armado del sistema, el progreso se guarda: al volver a abrirlo retoma desde el último paso aprobado. Una conversación para crear un componente, en cambio, hay que empezarla de nuevo.</p></div></details>
+        <details><summary>La documentación no navega en Chrome cuando la abro en mi computadora</summary>
+          <div><p>En macOS, si guardaste la carpeta dentro de Documentos, Chrome necesita permiso para leerla:</p>
+            <p><span class="path"><span>Ajustes del Sistema</span><i>→</i><span>Privacidad y seguridad</span><i>→</i><span>Archivos y carpetas</span><i>→</i><span>Google Chrome</span><i>→</i><span>Carpeta Documentos</span></span></p>
+            <p>Safari funciona sin ese paso, y publicada en un hosting no hace falta nada.</p></div></details>
+        <details><summary>Me falta una fuente</summary>
+          <div><p>Si la familia tipográfica que usan tus pantallas no está instalada, el plugin usa la más cercana y te avisa.</p></div></details>
+      </div>
+    </section>
+
+    <section id="limites">
+      <h2>Límites conocidos</h2>
+      <p class="muted">Es un prototipo. Esto ya lo sabemos, así que no hace falta reportarlo:</p>
+      <ul class="limits">
+        <li>Las sombras todavía no se convierten en tokens.</li>
+        <li>La tipografía no tiene capa semántica: los Text Styles se atan directo a los primitivos.</li>
+        <li>El Select se construye cerrado, sin el menú desplegado, y los íconos base son tres (más, flecha, tilde).</li>
+        <li>En los componentes conversados, los estados interactivos se ven como variantes, y no hay overlays posicionados.</li>
+        <li>En la documentación, las secciones de decisiones y changelog salen vacías por ahora.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <span>DS Copilot · prototipo 5 · Plugin de Figma en desarrollo, todavía no publicado en Figma Community.</span>
+      <a class="btn secondary" href="plugin.zip" download>Descargar plugin.zip</a>
+    </footer>
+  </main>
+</div>
+<script>
+(function(){
+  var body=document.body, btn=document.querySelector('.menu-btn'), nav=document.getElementById('toc'),
+      bar=document.querySelector('.topbar'), scrim=document.querySelector('.scrim'),
+      mq=window.matchMedia('(max-width:1024px)');
+  function setH(){ if(bar.offsetHeight) document.documentElement.style.setProperty('--topbar-h', bar.offsetHeight+'px'); }
+  function setOpen(open){
+    body.classList.toggle('nav-open',open);
+    btn.setAttribute('aria-expanded',String(open));
+    btn.setAttribute('aria-label',open?'Cerrar menú':'Abrir menú');
+    if(open){ setH(); var first=nav.querySelector('a'); if(first) first.focus(); }
+  }
+  btn.addEventListener('click',function(){ setOpen(!body.classList.contains('nav-open')); });
+  scrim.addEventListener('click',function(){ setOpen(false); });
+  nav.addEventListener('click',function(e){ if(e.target.closest('a') && mq.matches) setOpen(false); });
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape' && body.classList.contains('nav-open')){ setOpen(false); btn.focus(); }
+  });
+  var onChange=function(){ setH(); if(!mq.matches) setOpen(false); };
+  if(mq.addEventListener) mq.addEventListener('change',onChange); else mq.addListener(onChange);
+  window.addEventListener('resize',setH); setH();
+})();
+</script>
+</body>
+</html>
