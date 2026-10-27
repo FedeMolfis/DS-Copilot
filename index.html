@@ -191,19 +191,14 @@ details.flow .body{padding:0 var(--space-m) var(--space-m);display:flex;flex-dir
 .origin.calc{background:var(--sunk)}
 .origin.draft{border:1px dashed var(--line-strong)}
 
-/* Qué mirar — checkbox estilo Figma */
-.checks{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:var(--space-xs)}
-.checks li{display:grid;grid-template-columns:20px minmax(0,1fr);gap:var(--space-xs);align-items:start}
-.checks input{appearance:none;-webkit-appearance:none;width:20px;height:20px;margin:2px 0 0;border:1px solid var(--line-strong);border-radius:var(--radius-s);background:var(--bg);display:grid;place-items:center;cursor:pointer}
-.checks input:checked{background:var(--action);border-color:var(--action)}
-.checks input:checked::after{content:"";width:5px;height:10px;border:solid var(--on-action);border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg)}
-.checks label{cursor:pointer}
-
 /* Problemas */
 .faq{display:flex;flex-direction:column;border-top:1px solid var(--line)}
 .faq details{border-bottom:1px solid var(--line)}
 .faq summary{cursor:pointer;padding:var(--space-s) 0;font-weight:500}
 .faq details>div{padding:0 0 var(--space-s);color:var(--muted);display:flex;flex-direction:column;gap:var(--space-xs)}
+
+.foot-info{display:flex;flex-direction:column;gap:var(--space-xxs);min-width:0}
+.feedback-cta{display:flex;flex-wrap:wrap;align-items:center;gap:var(--space-s)}
 
 .limits li{color:var(--muted)}
 footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14px;color:var(--muted);display:flex;flex-wrap:wrap;gap:var(--space-s);justify-content:space-between;align-items:center}
@@ -227,9 +222,9 @@ footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14p
     <a href="#al-abrirlo">Al abrirlo</a>
     <a href="#flujos">Qué podés hacer</a>
     <a href="#recorrido">Recorrido de prueba</a>
-    <a href="#que-mirar">Qué mirar</a>
+    <a href="#feedback">Enviar feedback</a>
     <a href="#problemas">Si algo falla</a>
-    <a href="#limites">Límites conocidos</a>
+    <a href="#limites">Lo que todavía no hace</a>
   </nav>
 
   <main>
@@ -391,19 +386,17 @@ footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14p
       </ol>
     </section>
 
-    <section id="que-mirar">
-      <h2>Qué mirar</h2>
-      <p class="muted">Estas son las preguntas que más nos sirven. Podés ir tildándolas a medida que las probás.</p>
-      <ul class="checks">
-        <li><input type="checkbox" id="q1"><label for="q1">¿Las propuestas se sienten basadas en <em>tus</em> pantallas, o genéricas?</label></li>
-        <li><input type="checkbox" id="q2"><label for="q2">¿El resumen de cada paso te alcanza para decidir?</label></li>
-        <li><input type="checkbox" id="q3"><label for="q3">¿Pedir un cambio con tus palabras funciona? Probá algo que rompa una regla, como «usá este color de texto aunque no llegue al contraste», y fijate cómo responde.</label></li>
-        <li><input type="checkbox" id="q4"><label for="q4">¿Cuánto tarda cada propuesta? ¿Se hace larga la espera?</label></li>
-        <li><input type="checkbox" id="q5"><label for="q5">En Figma, ¿las Variables, los estilos y los componentes quedaron como esperabas?</label></li>
-        <li><input type="checkbox" id="q6"><label for="q6">¿El componente conversado salió como lo imaginabas? ¿Cuántas vueltas hicieron falta?</label></li>
-        <li><input type="checkbox" id="q7"><label for="q7">¿La documentación generada la publicarías así, o qué le falta?</label></li>
-      </ul>
-      <p class="faint">Mandá tus respuestas, capturas o errores respondiendo el mensaje con el que te llegó esta página. Si aparece un error en rojo dentro del plugin, copiá el texto completo.</p>
+    <section id="feedback">
+      <h2>Contame cómo te fue</h2>
+      <p class="muted">Todo el feedback lo junto en un formulario, así lo reviso ordenado y no se pierde entre mensajes. Lleva unos 5 minutos, todas las preguntas son opcionales y podés adjuntar capturas.</p>
+      <div class="note"><strong>Si apareció un error en rojo en el plugin</strong><span>Copiá el texto completo y pegalo en el campo de errores. Es lo que más me ayuda a encontrar el problema.</span></div>
+      <div class="feedback-cta">
+        <a class="btn primary l" href="https://tally.so/r/M11d6p" target="_blank" rel="noopener">
+          Abrir el formulario de feedback
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 4h6v6"/><path d="M20 4 11 13"/><path d="M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>
+        </a>
+        <span class="faint">Se abre en una pestaña nueva.</span>
+      </div>
     </section>
 
     <section id="problemas">
@@ -427,8 +420,7 @@ footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14p
     </section>
 
     <section id="limites">
-      <h2>Límites conocidos</h2>
-      <p class="muted">Es un prototipo. Esto ya lo sabemos, así que no hace falta reportarlo:</p>
+      <h2>Lo que por ahora no hace el plugin</h2>
       <ul class="limits">
         <li>Las sombras todavía no se convierten en tokens.</li>
         <li>La tipografía no tiene capa semántica: los Text Styles se atan directo a los primitivos.</li>
@@ -439,7 +431,10 @@ footer{border-top:1px solid var(--line);padding-top:var(--space-m);font-size:14p
     </section>
 
     <footer>
-      <span>DS Copilot · prototipo 5 · Plugin de Figma en desarrollo, todavía no publicado en Figma Community.</span>
+      <div class="foot-info">
+        <span>DS Copilot · prototipo 5 · Plugin de Figma en desarrollo, todavía no publicado en Figma Community.</span>
+        <span><a href="https://www.linkedin.com/in/federicomolfino/" target="_blank" rel="noopener">Escribime en LinkedIn</a></span>
+      </div>
       <a class="btn secondary" href="DS-Copilot.zip" download>Descargar DS-Copilot.zip</a>
     </footer>
   </main>
